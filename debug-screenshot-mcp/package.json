@@ -1,0 +1,84 @@
+{
+  "name": "debug-screenshot-mcp",
+  "displayName": "Debug Screenshot MCP",
+  "description": "AI 디버그 지원: 스크린샷 + 콜스택 + 컨텍스트를 MCP 서버로 전송",
+  "version": "0.1.0",
+  "publisher": "arielnetworks",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/arielnetworks/debug-screenshot-mcp"
+  },
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Debuggers",
+    "Other"
+  ],
+  "keywords": [
+    "debug",
+    "screenshot",
+    "mcp",
+    "ai",
+    "context"
+  ],
+  "activationEvents": [
+    "onCommand:debugScreenshot.capture"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "debugScreenshot.capture",
+        "title": "Debug Screenshot: Capture & Send to MCP",
+        "category": "Debug Screenshot"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "debugScreenshot.capture",
+        "key": "ctrl+shift+alt+d",
+        "mac": "cmd+shift+alt+d",
+        "when": "editorFocus || !editorFocus"
+      }
+    ],
+    "configuration": {
+      "title": "Debug Screenshot MCP",
+      "properties": {
+        "debugScreenshotMcp.serverUrl": {
+          "type": "string",
+          "default": "http://localhost:5010",
+          "description": "MCP 서버 URL (예: http://localhost:5010)"
+        },
+        "debugScreenshotMcp.maxConsoleLines": {
+          "type": "number",
+          "default": 100,
+          "minimum": 10,
+          "maximum": 1000,
+          "description": "디버그 콘솔 최대 수집 라인 수"
+        },
+        "debugScreenshotMcp.captureTimeout": {
+          "type": "number",
+          "default": 30000,
+          "description": "MCP 서버 요청 타임아웃 (ms)"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "package": "vsce package",
+    "lint": "eslint src --ext ts",
+    "pretest": "npm run compile",
+    "test": "node ./out/test/runTest.js"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/vscode": "^1.85.0",
+    "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "screenshot-desktop": "^1.15.0"
+  }
+}

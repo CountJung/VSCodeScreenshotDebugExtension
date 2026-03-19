@@ -1,0 +1,27 @@
+{
+  "name": "debug-screenshot-mcp-server",
+  "version": "0.1.0",
+  "description": "MCP Server for Debug Screenshot VSCode Extension",
+  "main": "dist/mcpServer.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/mcpServer.js",
+    "dev": "ts-node mcpServer.ts",
+    "service:install": "node dist/serviceManager.js install",
+    "service:uninstall": "node dist/serviceManager.js uninstall",
+    "service:start": "node dist/serviceManager.js start",
+    "service:stop": "node dist/serviceManager.js stop",
+    "service:restart": "node dist/serviceManager.js restart",
+    "service:status": "node dist/serviceManager.js status"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "node-windows": "^1.0.0-beta.8",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
+  }
+}

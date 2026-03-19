@@ -1,0 +1,54 @@
+# ===========================
+# Debug Screenshot MCP
+# ===========================
+
+# Dependencies
+node_modules/
+
+# Build outputs
+out/
+dist/
+
+# VSIX packages
+*.vsix
+
+# TypeScript
+*.tsbuildinfo
+
+# Source maps (optional: keep for debugging)
+# *.map
+
+# OS files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# IDE
+.idea/
+*.swp
+*.swo
+*~
+
+# Environment / Secrets
+.env
+.env.*
+*.key
+*.pem
+*.pfx
+*.p12
+
+# Logs
+*.log
+npm-debug.log*
+
+# Temp files
+tmp/
+temp/
+*.tmp
+
+# Windows service daemon files
+daemon/
+
+# Coverage
+coverage/
+.nyc_output/
