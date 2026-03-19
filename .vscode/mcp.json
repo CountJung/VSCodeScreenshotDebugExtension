@@ -4,7 +4,7 @@
             "type": "stdio",
             "command": "node",
             "args": [
-                "${workspaceFolder}/debug-screenshot-mcp/server/dist/mcpStdioServer.js"
+                "${workspaceFolder}/server/dist/mcpStdioServer.js"
             ],
             "env": {}
         }
