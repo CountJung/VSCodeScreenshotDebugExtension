@@ -127,6 +127,47 @@ Or: `Ctrl+Shift+P` → `Debug Screenshot: Capture & Send to MCP`
 6. AI agent receives full analysis context via MCP tools
 ```
 
+## Using MCP Tools in Copilot Chat
+
+Once the MCP server is registered and running, you can use it directly from VS Code Copilot Chat.
+
+### Verifying MCP Connection
+
+1. Open Copilot Chat panel
+2. Click the **tool icon (🔧)** at the bottom of the chat input
+3. Check that `debug-screenshot-mcp` server appears in the tool list
+4. If the server shows as "stopped", click it to start
+
+> **Note**: If `chat.mcp.autostart` is set to `"never"` (default), you must manually start the server from the tool list each time VS Code launches. Set it to `"always"` for automatic startup.
+
+### Attaching Tools as Context
+
+To pass MCP tool results as context to the AI agent, type `#` in the chat input to browse available tools:
+
+```
+# → select a tool from the dropdown:
+  #mcp_debug-screens_list_captures     — List all saved capture sessions
+  #mcp_debug-screens_capture_all_screens — Capture all monitors now
+  #mcp_debug-screens_get_debug_context   — Get latest debug context
+  #mcp_debug-screens_list_displays       — List connected displays
+  #mcp_debug-screens_get_capture_screenshot — Get a specific screenshot
+```
+
+Example chat message:
+```
+#mcp_debug-screens_list_captures Show me the recent debug captures
+```
+
+The AI agent will call the attached MCP tool, receive the result, and incorporate it into its response. This is the intended way to pass debugging context to the AI — the tool is invoked server-side, not just referenced.
+
+### Verifying Data is Actually Delivered
+
+To confirm that MCP data is being properly delivered:
+
+1. **Check capture exists**: Attach `#mcp_debug-screens_list_captures` — if captures appear with timestamps and screenshot counts, the pipeline works
+2. **View a specific capture**: Attach `#mcp_debug-screens_get_debug_context` — the AI will show call stack, variables, and file info from the last capture
+3. **Check server logs**: The MCP stdio server logs to stderr — run `node server/dist/mcpStdioServer.js` manually in a terminal to see connection/request logs
+
 ## Windows Service
 
 Register the HTTP server as a Windows service for persistent background operation.
@@ -326,6 +367,47 @@ node server/dist/mcpStdioServer.js
 5. 디스크 저장 및 MCP 서버 전송
 6. AI 에이전트가 MCP 도구를 통해 분석 컨텍스트 수신
 ```
+
+## Copilot Chat에서 MCP 도구 사용하기
+
+MCP 서버가 등록되고 실행 중이면, VS Code Copilot Chat에서 직접 사용할 수 있습니다.
+
+### MCP 연결 확인
+
+1. Copilot Chat 패널 열기
+2. 채팅 입력창 하단의 **도구 아이콘(🔧)** 클릭
+3. `debug-screenshot-mcp` 서버가 도구 목록에 표시되는지 확인
+4. 서버가 "중지(stopped)" 상태이면 클릭하여 시작
+
+> **참고**: `chat.mcp.autostart`가 `"never"`(기본값)이면 VS Code 기동 시마다 수동으로 서버를 시작해야 합니다. `"always"`로 변경하면 자동 시작됩니다.
+
+### 도구를 컨텍스트로 첨부하기
+
+MCP 도구 결과를 AI 에이전트에게 컨텍스트로 전달하려면, 채팅 입력창에 `#`을 입력하여 사용 가능한 도구를 탐색합니다:
+
+```
+# → 드롭다운에서 도구 선택:
+  #mcp_debug-screens_list_captures       — 저장된 캡처 세션 목록 조회
+  #mcp_debug-screens_capture_all_screens — 전체 모니터 스크린샷 캡처
+  #mcp_debug-screens_get_debug_context   — 최신 디버그 컨텍스트 조회
+  #mcp_debug-screens_list_displays       — 연결된 디스플레이 목록 조회
+  #mcp_debug-screens_get_capture_screenshot — 특정 스크린샷 이미지 조회
+```
+
+예시 채팅 메시지:
+```
+#mcp_debug-screens_list_captures 최근 디버그 캡처 목록을 보여줘
+```
+
+AI 에이전트가 첨부된 MCP 도구를 호출하고, 결과를 받아 응답에 반영합니다. 이것이 디버깅 컨텍스트를 AI에게 전달하는 의도된 방법입니다 — 도구가 실제로 서버 측에서 호출됩니다.
+
+### 데이터 전달 확인 방법
+
+MCP 데이터가 제대로 전달되는지 확인하려면:
+
+1. **캡처 존재 확인**: `#mcp_debug-screens_list_captures`를 첨부 — 타임스탬프와 스크린샷 수가 표시되면 파이프라인 정상
+2. **특정 캡처 확인**: `#mcp_debug-screens_get_debug_context`를 첨부 — AI가 콜스택, 변수, 파일 정보를 보여줌
+3. **서버 로그 확인**: MCP stdio 서버는 stderr로 로그 출력 — 터미널에서 `node server/dist/mcpStdioServer.js`를 직접 실행하면 연결/요청 로그를 확인 가능
 
 ## Windows 서비스
 

@@ -28,7 +28,7 @@ $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $ServerDir = Join-Path $ScriptDir "server"
 $ServiceManagerJs = Join-Path $ServerDir "dist" "serviceManager.js"
 $McpServerJs = Join-Path $ServerDir "dist" "mcpServer.js"
-$ServiceName = "DebugScreenshotMCP"
+$ServiceName = "debugscreenshotmcp.exe"
 
 function Write-Header {
     Write-Host ""

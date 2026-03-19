@@ -96,9 +96,11 @@ function stop(): void {
 
 function status(): void {
     // sc query로 서비스 상태 확인
+    // node-windows는 서비스명을 소문자 + .exe 형태로 등록한다
+    const actualServiceName = SERVICE_NAME.toLowerCase() + '.exe';
     const { execSync } = require('child_process');
     try {
-        const output = execSync(`sc query "${SERVICE_NAME}"`, { encoding: 'utf8' });
+        const output = execSync(`sc query "${actualServiceName}"`, { encoding: 'utf8' });
         console.log(output);
     } catch {
         console.log(`[Service] '${SERVICE_NAME}' 서비스를 찾을 수 없습니다. (미설치)`);
