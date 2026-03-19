@@ -1,11 +1,13 @@
 .vscode/**
 src/**
-node_modules/**
-server/node_modules/**
+server/**
 **/*.map
 **/*.ts
 !out/**
-!server/dist/**
+node_modules/@modelcontextprotocol/**
+node_modules/zod/**
 .gitignore
 tsconfig.json
 vsc-extension-quickstart.md
+manage-service.ps1
+manage-service.bat

@@ -1,0 +1,12 @@
+{
+    "servers": {
+        "debug-screenshot-mcp": {
+            "type": "stdio",
+            "command": "node",
+            "args": [
+                "${workspaceFolder}/debug-screenshot-mcp/server/dist/mcpStdioServer.js"
+            ],
+            "env": {}
+        }
+    }
+}

@@ -5,7 +5,8 @@ import { DebugContext } from '../context/vscodeContext';
 
 export interface McpPayload {
     type: 'debug_capture';
-    screenshot: string;       // Base64 PNG
+    screenshot: string;       // Base64 PNG (주 모니터, 하위호환)
+    screenshots?: Array<{ displayId: string; displayName: string; base64: string }>; // 전체 모니터
     file: string;
     line: number;
     code: string;

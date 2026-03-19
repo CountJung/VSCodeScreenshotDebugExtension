@@ -1,8 +1,13 @@
 import * as vscode from 'vscode';
-import { captureScreen } from '../capture/screenshot';
+import * as fs from 'fs';
+import * as path from 'path';
+import * as os from 'os';
+import { captureAllScreens, DisplayScreenshot } from '../capture/screenshot';
 import { collectDebugContext } from '../context/vscodeContext';
 import { sendDebugCapture, McpPayload } from '../mcp/mcpClient';
 import { maskSensitiveData } from '../utils/security';
+
+const CAPTURE_DIR = path.join(os.homedir(), '.debug-screenshot-mcp', 'captures');
 
 let outputChannel: vscode.OutputChannel;
 
@@ -27,11 +32,14 @@ export async function captureAndSend(): Promise<void> {
         },
         async progress => {
             try {
-                // Step 1: 스크린샷 캡처
-                progress.report({ message: '스크린샷 캡처 중...', increment: 10 });
-                channel.appendLine(`[${new Date().toISOString()}] 스크린샷 캡처 시작`);
-                const screenshotBase64 = await captureScreen();
-                channel.appendLine(`스크린샷 캡처 완료 (${(screenshotBase64.length / 1024).toFixed(1)} KB)`);
+                // Step 1: 전체 모니터 스크린샷 캡처
+                progress.report({ message: '전체 모니터 스크린샷 캡처 중...', increment: 10 });
+                channel.appendLine(`[${new Date().toISOString()}] 전체 모니터 스크린샷 캡처 시작`);
+                const screenshots = await captureAllScreens();
+                const totalKB = screenshots.reduce((s, sc) => s + sc.base64.length, 0) / 1024;
+                channel.appendLine(`스크린샷 캡처 완료 (${screenshots.length}개 모니터, ${totalKB.toFixed(1)} KB)`);
+                // 주 모니터 스크린샷 (HTTP 전송용 하위호환)
+                const screenshotBase64 = screenshots[0]?.base64 ?? '';
 
                 // Step 2: 디버그 컨텍스트 수집
                 progress.report({ message: '디버그 컨텍스트 수집 중...', increment: 30 });
@@ -42,11 +50,17 @@ export async function captureAndSend(): Promise<void> {
                 const maskedContext = maskSensitiveData(context);
                 logContext(channel, maskedContext);
 
-                // Step 3: MCP 페이로드 구성
+                // Step 3: 캡처 결과를 디스크에 저장 (MCP 도구 연동용)
+                progress.report({ message: '캡처 저장 중...', increment: 50 });
+                saveCaptureToDisc(screenshots, maskedContext);
+                channel.appendLine(`캡처 디스크 저장 완료: ${CAPTURE_DIR}`);
+
+                // Step 4: MCP HTTP 서버로 전송 (기존 호환)
                 progress.report({ message: 'MCP 서버로 전송 중...', increment: 60 });
                 const payload: McpPayload = {
                     type: 'debug_capture',
                     screenshot: screenshotBase64,
+                    screenshots: screenshots.map(s => ({ displayId: s.displayId, displayName: s.displayName, base64: s.base64 })),
                     file: maskedContext.filePath,
                     line: maskedContext.lineNumber,
                     code: maskedContext.selectedCode,
@@ -56,7 +70,7 @@ export async function captureAndSend(): Promise<void> {
                     timestamp: maskedContext.timestamp,
                 };
 
-                // Step 4: 전송
+                // Step 5: 전송
                 const response = await sendDebugCapture(payload);
                 progress.report({ message: '완료!', increment: 100 });
 
@@ -102,4 +116,33 @@ function logContext(channel: vscode.OutputChannel, ctx: ReturnType<typeof maskSe
         });
     }
     channel.appendLine('--- 컨텍스트 끝 ---');
+}
+
+/**
+ * 캡처 결과를 디스크에 저장하여 MCP stdio 서버에서 접근 가능하게 함
+ */
+function saveCaptureToDisc(screenshots: DisplayScreenshot[], context: ReturnType<typeof maskSensitiveData>): void {
+    const timestamp = Date.now();
+    const captureDir = path.join(CAPTURE_DIR, `capture-${timestamp}`);
+
+    if (!fs.existsSync(captureDir)) {
+        fs.mkdirSync(captureDir, { recursive: true });
+    }
+
+    // 스크린샷 저장
+    for (let i = 0; i < screenshots.length; i++) {
+        const sc = screenshots[i];
+        const filePath = path.join(captureDir, `screen-${i}-${sc.displayId.replace(/[\\/.]/g, '_')}.png`);
+        const buffer = Buffer.from(sc.base64, 'base64');
+        fs.writeFileSync(filePath, buffer);
+    }
+
+    // 컨텍스트 JSON 저장
+    const contextData = {
+        ...context,
+        captureTimestamp: new Date(timestamp).toISOString(),
+        displayCount: screenshots.length,
+        displays: screenshots.map(s => ({ displayId: s.displayId, displayName: s.displayName, sizeMB: s.sizeMB })),
+    };
+    fs.writeFileSync(path.join(captureDir, 'context.json'), JSON.stringify(contextData, null, 2));
 }

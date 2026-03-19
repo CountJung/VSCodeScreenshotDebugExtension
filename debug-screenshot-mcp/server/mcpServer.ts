@@ -5,6 +5,12 @@ import * as os from 'os';
 
 const PORT = process.env.MCP_PORT ? parseInt(process.env.MCP_PORT, 10) : 5010;
 
+// 스크린샷 자동 정리 설정
+const SCREENSHOT_MAX_AGE_MS = 60 * 60 * 1000;           // 1시간
+const SCREENSHOT_MAX_COUNT = 50;                          // 최대 보관 개수
+const CLEANUP_INTERVAL_MS = 10 * 60 * 1000;              // 10분마다 정리
+const SCREENSHOT_FILE_PATTERN = /^mcp-debug-capture-\d+\.png$/;
+
 interface StackFrame {
     frameId: number;
     name: string;
@@ -39,6 +45,7 @@ interface DebugContext {
 interface DebugCapturePayload {
     type: 'debug_capture';
     screenshot: string;
+    screenshots?: Array<{ displayId: string; displayName: string; base64: string }>;
     file: string;
     line: number;
     code: string;
@@ -110,6 +117,68 @@ function saveScreenshot(base64: string): string {
 }
 
 /**
+ * 오래된 스크린샷 파일 정리
+ * - maxAge보다 오래된 파일 삭제
+ * - 파일 수가 maxCount를 초과하면 오래된 순서로 삭제
+ */
+function cleanupScreenshots(): { deleted: number; remaining: number } {
+    const tmpDir = os.tmpdir();
+    let deleted = 0;
+
+    try {
+        const files = fs.readdirSync(tmpDir)
+            .filter(f => SCREENSHOT_FILE_PATTERN.test(f))
+            .map(f => {
+                const fullPath = path.join(tmpDir, f);
+                const stat = fs.statSync(fullPath);
+                return { name: f, path: fullPath, mtimeMs: stat.mtimeMs };
+            })
+            .sort((a, b) => b.mtimeMs - a.mtimeMs); // 최신순 정렬
+
+        const now = Date.now();
+
+        for (const file of files) {
+            const age = now - file.mtimeMs;
+            if (age > SCREENSHOT_MAX_AGE_MS) {
+                try {
+                    fs.unlinkSync(file.path);
+                    deleted++;
+                } catch { /* 삭제 실패 무시 */ }
+            }
+        }
+
+        // maxAge로 삭제 후에도 개수 초과 시 오래된 것부터 추가 삭제
+        const remaining = files.filter(f => {
+            try { return fs.existsSync(f.path); } catch { return false; }
+        });
+
+        if (remaining.length > SCREENSHOT_MAX_COUNT) {
+            const toRemove = remaining.slice(SCREENSHOT_MAX_COUNT);
+            for (const file of toRemove) {
+                try {
+                    fs.unlinkSync(file.path);
+                    deleted++;
+                } catch { /* 삭제 실패 무시 */ }
+            }
+        }
+
+        const finalCount = remaining.length - (remaining.length > SCREENSHOT_MAX_COUNT ? remaining.length - SCREENSHOT_MAX_COUNT : 0);
+        if (deleted > 0) {
+            console.log(`[MCP Server] 스크린샷 정리: ${deleted}개 삭제, ${finalCount}개 남음`);
+        }
+        return { deleted, remaining: finalCount };
+    } catch (err) {
+        console.error('[MCP Server] 스크린샷 정리 오류:', err);
+        return { deleted: 0, remaining: -1 };
+    }
+}
+
+// 주기적 정리 타이머
+setInterval(() => {
+    cleanupScreenshots();
+}, CLEANUP_INTERVAL_MS);
+
+/**
  * HTTP 서버 생성 및 시작
  */
 const server = http.createServer((req, res) => {
@@ -137,11 +206,21 @@ const server = http.createServer((req, res) => {
                     return;
                 }
 
-                // 스크린샷 저장
-                let screenshotPath = '';
-                if (payload.screenshot) {
-                    screenshotPath = saveScreenshot(payload.screenshot);
-                    console.log(`[MCP Server] 스크린샷 저장: ${screenshotPath}`);
+                // 스크린샷 저장 (다중 모니터 지원)
+                const screenshotPaths: string[] = [];
+                if (payload.screenshots && payload.screenshots.length > 0) {
+                    for (const sc of payload.screenshots) {
+                        const p = saveScreenshot(sc.base64);
+                        screenshotPaths.push(p);
+                        console.log(`[MCP Server] 스크린샷 저장 (${sc.displayName}): ${p}`);
+                    }
+                } else if (payload.screenshot) {
+                    const p = saveScreenshot(payload.screenshot);
+                    screenshotPaths.push(p);
+                    console.log(`[MCP Server] 스크린샷 저장: ${p}`);
+                }
+                if (screenshotPaths.length > 0) {
+                    cleanupScreenshots();
                 }
 
                 // 분석 힌트 생성
@@ -151,7 +230,9 @@ const server = http.createServer((req, res) => {
                 // 응답
                 const response = {
                     status: 'received',
-                    screenshotPath,
+                    screenshotPath: screenshotPaths[0] ?? '',
+                    screenshotPaths,
+                    screenshotCount: screenshotPaths.length,
                     analysisHint,
                     receivedAt: new Date().toISOString(),
                 };
@@ -168,8 +249,18 @@ const server = http.createServer((req, res) => {
     }
 
     if (req.method === 'GET' && req.url === '/health') {
+        const stats = cleanupScreenshots();
         res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ status: 'ok', port: PORT }));
+        res.end(JSON.stringify({
+            status: 'ok',
+            port: PORT,
+            screenshots: stats.remaining,
+            cleanupPolicy: {
+                maxAgeMinutes: SCREENSHOT_MAX_AGE_MS / 60000,
+                maxCount: SCREENSHOT_MAX_COUNT,
+                cleanupIntervalMinutes: CLEANUP_INTERVAL_MS / 60000,
+            },
+        }));
         return;
     }
 
@@ -181,6 +272,9 @@ server.listen(PORT, '127.0.0.1', () => {
     console.log(`[MCP Server] Debug Screenshot MCP 서버 시작`);
     console.log(`[MCP Server] 수신 주소: http://127.0.0.1:${PORT}`);
     console.log(`[MCP Server] 엔드포인트: POST /debug-capture`);
+    console.log(`[MCP Server] 스크린샷 정리 정책: ${SCREENSHOT_MAX_AGE_MS / 60000}분 초과 또는 ${SCREENSHOT_MAX_COUNT}개 초과 시 자동 삭제`);
+    // 서버 시작 시 기존 잔여 파일 정리
+    cleanupScreenshots();
 });
 
 server.on('error', (err: NodeJS.ErrnoException) => {
