@@ -2,7 +2,7 @@
   "name": "debug-screenshot-mcp",
   "displayName": "Debug Screenshot MCP",
   "description": "AI 디버그 지원: 스크린샷 + 콜스택 + 컨텍스트를 MCP 서버로 전송",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "publisher": "arielnetworks",
   "repository": {
     "type": "git",
@@ -61,6 +61,13 @@
           "type": "number",
           "default": 30000,
           "description": "MCP 서버 요청 타임아웃 (ms)"
+        },
+        "debugScreenshotMcp.captureDelay": {
+          "type": "number",
+          "default": 3000,
+          "minimum": 0,
+          "maximum": 10000,
+          "description": "스크린샷 캡처 전 대기 시간 (ms). 단일 모니터에서 대상 앱으로 전환할 시간 확보용. 0이면 즉시 캡처."
         }
       }
     }

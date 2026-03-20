@@ -20,9 +20,17 @@ export function initOutputChannel(): vscode.OutputChannel {
 
 /**
  * 메인 커맨드 핸들러: 스크린샷 + 컨텍스트 수집 → MCP 서버 전송
+ *
+ * 실행 순서:
+ * 1. 디버그 컨텍스트 수집 (VS Code 포커스 상태에서 DAP 접근 필요)
+ * 2. 딜레이 대기 (captureDelay > 0이면 사용자가 대상 앱으로 전환할 시간 제공)
+ * 3. 스크린샷 캡처 (딜레이 후 대상 앱이 전면에 노출된 상태)
+ * 4. MCP 서버 전송
  */
 export async function captureAndSend(): Promise<void> {
     const channel = initOutputChannel();
+    const config = vscode.workspace.getConfiguration('debugScreenshotMcp');
+    const captureDelay = config.get<number>('captureDelay', 3000);
 
     await vscode.window.withProgress(
         {
@@ -32,30 +40,38 @@ export async function captureAndSend(): Promise<void> {
         },
         async progress => {
             try {
-                // Step 1: 전체 모니터 스크린샷 캡처
-                progress.report({ message: '전체 모니터 스크린샷 캡처 중...', increment: 10 });
-                channel.appendLine(`[${new Date().toISOString()}] 전체 모니터 스크린샷 캡처 시작`);
+                // Step 1: 디버그 컨텍스트 수집 (VS Code 포커스 상태에서 먼저 수집)
+                progress.report({ message: '디버그 컨텍스트 수집 중...', increment: 10 });
+                channel.appendLine(`[${new Date().toISOString()}] 컨텍스트 수집 시작`);
+                const context = await collectDebugContext();
+
+                // Step 2: 딜레이 (단일 모니터 환경에서 대상 앱 전환 시간 확보)
+                if (captureDelay > 0) {
+                    const delaySec = (captureDelay / 1000).toFixed(1);
+                    channel.appendLine(`캡처 딜레이: ${delaySec}초 후 스크린샷 촬영 — 대상 앱으로 전환하세요`);
+                    progress.report({ message: `${delaySec}초 후 캡처... 대상 앱으로 전환하세요`, increment: 20 });
+                    await delay(captureDelay);
+                }
+
+                // Step 3: 전체 모니터 스크린샷 캡처
+                progress.report({ message: '전체 모니터 스크린샷 캡처 중...', increment: 30 });
+                channel.appendLine(`전체 모니터 스크린샷 캡처 시작`);
                 const screenshots = await captureAllScreens();
                 const totalKB = screenshots.reduce((s, sc) => s + sc.base64.length, 0) / 1024;
                 channel.appendLine(`스크린샷 캡처 완료 (${screenshots.length}개 모니터, ${totalKB.toFixed(1)} KB)`);
                 // 주 모니터 스크린샷 (HTTP 전송용 하위호환)
                 const screenshotBase64 = screenshots[0]?.base64 ?? '';
 
-                // Step 2: 디버그 컨텍스트 수집
-                progress.report({ message: '디버그 컨텍스트 수집 중...', increment: 30 });
-                channel.appendLine('컨텍스트 수집 시작');
-                const context = await collectDebugContext();
-
                 // 민감 정보 마스킹 (보안)
                 const maskedContext = maskSensitiveData(context);
                 logContext(channel, maskedContext);
 
-                // Step 3: 캡처 결과를 디스크에 저장 (MCP 도구 연동용)
+                // Step 4: 캡처 결과를 디스크에 저장 (MCP 도구 연동용)
                 progress.report({ message: '캡처 저장 중...', increment: 50 });
                 saveCaptureToDisc(screenshots, maskedContext);
                 channel.appendLine(`캡처 디스크 저장 완료: ${CAPTURE_DIR}`);
 
-                // Step 4: MCP HTTP 서버로 전송 (기존 호환)
+                // Step 5: MCP HTTP 서버로 전송 (기존 호환)
                 progress.report({ message: 'MCP 서버로 전송 중...', increment: 60 });
                 const payload: McpPayload = {
                     type: 'debug_capture',
@@ -70,7 +86,7 @@ export async function captureAndSend(): Promise<void> {
                     timestamp: maskedContext.timestamp,
                 };
 
-                // Step 5: 전송
+                // Step 6: 전송
                 const response = await sendDebugCapture(payload);
                 progress.report({ message: '완료!', increment: 100 });
 
@@ -145,4 +161,11 @@ function saveCaptureToDisc(screenshots: DisplayScreenshot[], context: ReturnType
         displays: screenshots.map(s => ({ displayId: s.displayId, displayName: s.displayName, sizeMB: s.sizeMB })),
     };
     fs.writeFileSync(path.join(captureDir, 'context.json'), JSON.stringify(contextData, null, 2));
+}
+
+/**
+ * 지정된 밀리초만큼 대기
+ */
+function delay(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms));
 }

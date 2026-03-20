@@ -201,6 +201,30 @@ VS Code Settings (`settings.json`):
 | `debugScreenshotMcp.serverUrl` | `http://localhost:5010` | MCP server URL (localhost/private IP only) |
 | `debugScreenshotMcp.maxConsoleLines` | `100` | Max debug console lines to collect |
 | `debugScreenshotMcp.captureTimeout` | `30000` | Server request timeout (ms) |
+| `debugScreenshotMcp.captureDelay` | `0` | Delay before screenshot (ms). Use on single monitor to switch to target app. 0 = instant. |
+
+## Single Monitor Usage
+
+On a single-monitor setup, VS Code must have focus to trigger the shortcut key (`Ctrl+Shift+Alt+D`), which means VS Code is covering the target application being debugged.
+
+### Solution: Capture Delay
+
+Set a delay in `settings.json` to give yourself time to Alt+Tab to the target app:
+
+```json
+{
+  "debugScreenshotMcp.captureDelay": 3000
+}
+```
+
+**How it works:**
+1. Press `Ctrl+Shift+Alt+D` in VS Code
+2. Debug context (call stack, variables) is collected **immediately** while VS Code has focus
+3. Notification appears: *"3.0초 후 캡처... 대상 앱으로 전환하세요"*
+4. Alt+Tab to the target application
+5. After the delay, screenshots are captured with the target app visible
+
+> **Recommended**: On dual+ monitor setups, leave `captureDelay` at `0` and place the target app on a separate monitor from VS Code.
 
 ## Auto-cleanup
 
@@ -442,6 +466,30 @@ VS Code 설정 (`settings.json`):
 | `debugScreenshotMcp.serverUrl` | `http://localhost:5010` | MCP 서버 URL (localhost/사설 IP만 허용) |
 | `debugScreenshotMcp.maxConsoleLines` | `100` | 디버그 콘솔 최대 수집 라인 수 |
 | `debugScreenshotMcp.captureTimeout` | `30000` | 서버 요청 타임아웃 (ms) |
+| `debugScreenshotMcp.captureDelay` | `0` | 스크린샷 캡처 전 대기 시간 (ms). 단일 모니터에서 대상 앱 전환용. 0 = 즉시 캡처. |
+
+## 단일 모니터 환경
+
+단일 모니터 환경에서는 단축키(`Ctrl+Shift+Alt+D`)를 실행하려면 VS Code에 포커스가 있어야 하므로, 디버깅 대상 애플리케이션이 VS Code 뒤에 가려져 스크린샷에 담기지 않습니다.
+
+### 해결책: 캡처 딜레이
+
+`settings.json`에서 딜레이를 설정하면 Alt+Tab으로 대상 앱으로 전환할 시간을 확보할 수 있습니다:
+
+```json
+{
+  "debugScreenshotMcp.captureDelay": 3000
+}
+```
+
+**동작 원리:**
+1. VS Code에서 `Ctrl+Shift+Alt+D` 누름
+2. 디버그 컨텍스트(콜스택, 변수)를 VS Code 포커스 상태에서 **즉시 수집**
+3. 알림 표시: *"3.0초 후 캡처... 대상 앱으로 전환하세요"*
+4. Alt+Tab으로 대상 애플리케이션으로 전환
+5. 딜레이 후 대상 앱이 표시된 상태로 스크린샷 캡처
+
+> **권장**: 듀얼 모니터 이상 환경에서는 `captureDelay`를 `0`으로 두고, 디버깅 대상 앱을 VS Code와 다른 모니터에 배치하세요.
 
 ## 자동 정리
 

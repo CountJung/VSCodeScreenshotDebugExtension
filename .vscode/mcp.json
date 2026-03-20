@@ -6,7 +6,9 @@
             "args": [
                 "${workspaceFolder}/server/dist/mcpStdioServer.js"
             ],
-            "env": {}
+            "env": {
+                 "debugScreenshotMcp.captureDelay": 3000
+            }
         }
     }
 }

@@ -481,3 +481,27 @@
 
 - [x] **17-1** 영문 + 한글 순서로 루트 `README.md` 작성
 - [x] **17-2** 서브폴더 README 내용 반영 및 서비스 관리 안내 추가
+
+---
+
+## Phase 18 — 프로젝트 구조 정리
+
+- [x] **18-1** `debug-screenshot-mcp/` 서브폴더 내용을 루트로 이동 (Git 히스토리 보존)
+- [x] **18-2** `.vscode/mcp.json`, `.github/copilot-instructions.md` 경로 참조 업데이트
+- [x] **18-3** 전역 MCP settings.json 등록 (VS Code User Settings)
+- [x] **18-4** README.md 전면 재작성 (MCP 도구 사용법, 연결 확인 방법 추가)
+- [x] **18-5** Windows 서비스 이름 수정 (`node-windows`는 소문자+.exe로 등록)
+  - `serviceManager.ts` — `sc query` 서비스명을 `SERVICE_NAME.toLowerCase() + '.exe'`로 수정
+  - `manage-service.ps1` — `$ServiceName`을 `"debugscreenshotmcp.exe"`로 수정
+
+---
+
+## Phase 19 — 단일 모니터 캡처 딜레이
+
+- [x] **19-1** `debugScreenshotMcp.captureDelay` 설정 추가 (package.json, 기본값 0ms, 최대 10000ms)
+- [x] **19-2** 캡처 파이프라인 실행 순서 변경 (`captureDebug.ts`)
+  - 기존: 스크린샷 → 컨텍스트 → 마스킹 → 저장 → 전송
+  - 변경: **컨텍스트(DAP) → 딜레이(Alt+Tab 시간) → 스크린샷 → 마스킹 → 저장 → 전송**
+  - 이유: 디버그 컨텍스트는 VS Code 포커스 상태에서 수집해야 하고, 스크린샷은 대상 앱이 보여야 함
+- [x] **19-3** 딜레이 중 알림 메시지 표시 ("N초 후 캡처... 대상 앱으로 전환하세요")
+- [x] **19-4** README 영문/한글 "단일 모니터 환경" 섹션 추가, Configuration 테이블에 `captureDelay` 추가
