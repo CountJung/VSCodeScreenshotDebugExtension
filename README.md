@@ -2,6 +2,9 @@
 
 > VS Code Extension + MCP Server for capturing debugging screenshots, call stacks, local variables, and debug context — delivering full analysis context to AI agents.
 
+[![MCP Registry](https://img.shields.io/badge/MCP%20Registry-io.github.CountJung%2Fdebug--screenshot--mcp-blue)](https://registry.modelcontextprotocol.io/servers/io.github.CountJung/debug-screenshot-mcp)
+[![npm](https://img.shields.io/npm/v/@countjung/debug-screenshot-mcp)](https://www.npmjs.com/package/@countjung/debug-screenshot-mcp)
+
 ---
 
 ## Overview
@@ -50,6 +53,28 @@ The MCP stdio server exposes 5 tools for AI agents:
 | `get_capture_screenshot` | Get a specific screenshot image (base64) |
 
 ## Quick Start
+
+### 0. Install via npm (MCP Registry)
+
+The MCP server is published to the [MCP Registry](https://registry.modelcontextprotocol.io/servers/io.github.CountJung/debug-screenshot-mcp) and installable via npm:
+
+```bash
+npx @countjung/debug-screenshot-mcp
+```
+
+Or add directly to your MCP client config:
+
+```json
+{
+  "servers": {
+    "debug-screenshot-mcp": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@countjung/debug-screenshot-mcp"]
+    }
+  }
+}
+```
 
 ### 1. Build & Install Extension
 
@@ -315,6 +340,28 @@ MCP stdio 서버는 AI 에이전트용 5개 도구를 제공합니다:
 | `get_capture_screenshot` | 특정 스크린샷 이미지 조회 (base64) |
 
 ## 빠른 시작
+
+### 0. npm으로 설치 (MCP 레지스트리)
+
+MCP 서버는 [MCP 레지스트리](https://registry.modelcontextprotocol.io/servers/io.github.CountJung/debug-screenshot-mcp)에 등록되어 있으며 npm으로 설치 가능합니다:
+
+```bash
+npx @countjung/debug-screenshot-mcp
+```
+
+또는 MCP 클라이언트 설정에 직접 추가:
+
+```json
+{
+  "servers": {
+    "debug-screenshot-mcp": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@countjung/debug-screenshot-mcp"]
+    }
+  }
+}
+```
 
 ### 1. 확장 빌드 및 설치
 

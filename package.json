@@ -6,7 +6,7 @@
   "publisher": "arielnetworks",
   "repository": {
     "type": "git",
-    "url": "https://github.com/arielnetworks/debug-screenshot-mcp"
+    "url": "https://github.com/CountJung/VSCodeScreenshotDebugExtension"
   },
   "engines": {
     "vscode": "^1.85.0"
