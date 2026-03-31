@@ -1,8 +1,17 @@
 {
-  "name": "debug-screenshot-mcp-server",
+  "name": "@countjung/debug-screenshot-mcp",
   "version": "0.1.0",
-  "description": "MCP Server for Debug Screenshot VSCode Extension",
+  "mcpName": "io.github.CountJung/debug-screenshot-mcp",
+  "description": "MCP Server for Debug Screenshot VSCode Extension — captures screenshots, call stacks, local variables, and debug context for AI agents.",
   "main": "dist/mcpServer.js",
+  "bin": {
+    "debug-screenshot-mcp": "dist/mcpStdioServer.js"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/CountJung/VSCodeScreenshotDebugExtension.git"
+  },
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "start": "node dist/mcpServer.js",

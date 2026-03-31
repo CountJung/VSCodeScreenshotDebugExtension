@@ -1,0 +1,21 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.CountJung/debug-screenshot-mcp",
+  "title": "Debug Screenshot MCP",
+  "description": "VS Code Extension + MCP Server for capturing debugging screenshots, call stacks, local variables, and debug context — delivering full analysis context to AI agents.",
+  "repository": {
+    "url": "https://github.com/CountJung/VSCodeScreenshotDebugExtension",
+    "source": "github"
+  },
+  "version": "0.1.0",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "@countjung/debug-screenshot-mcp",
+      "version": "0.1.0",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ]
+}
