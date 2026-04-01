@@ -1,0 +1,14 @@
+# 소스 파일 (dist/로 컴파일된 것만 배포)
+*.ts
+tsconfig.json
+
+# 소스맵 (용량 절감)
+dist/**/*.map
+
+# 개발 도구
+node_modules/
+.gitignore
+.npmignore
+
+# Windows 서비스 데몬 런타임 파일 (node-windows 생성 아티팩트)
+dist/daemon

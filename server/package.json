@@ -7,13 +7,36 @@
   "bin": {
     "debug-screenshot-mcp": "dist/mcpStdioServer.js"
   },
+  "files": [
+    "dist/mcpServer.js",
+    "dist/mcpStdioServer.js",
+    "dist/serviceManager.js",
+    "server.json",
+    "README.md"
+  ],
   "license": "MIT",
+  "homepage": "https://github.com/CountJung/VSCodeScreenshotDebugExtension#readme",
+  "bugs": {
+    "url": "https://github.com/CountJung/VSCodeScreenshotDebugExtension/issues"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/CountJung/VSCodeScreenshotDebugExtension.git"
   },
+  "keywords": [
+    "mcp",
+    "debug",
+    "screenshot",
+    "vscode",
+    "ai",
+    "copilot",
+    "model-context-protocol",
+    "debugging",
+    "call-stack"
+  ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
+    "prepare": "npm run build",
     "start": "node dist/mcpServer.js",
     "dev": "ts-node mcpServer.ts",
     "service:install": "node dist/serviceManager.js install",
